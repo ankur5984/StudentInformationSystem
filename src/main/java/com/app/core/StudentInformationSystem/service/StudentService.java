@@ -7,18 +7,20 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
+@Transactional
 public class StudentService{
 
-
-    private EntityManager mgr; //issue occured @Autowiring is not working. so used injected in constructor
+    @PersistenceContext
+    private EntityManager mgr; //issue occurred @Autowiring is not working. so used injected in constructor
     private final IStudentRepository repo;
 
-    public StudentService(IStudentRepository _repo, EntityManager mgr){
+    public StudentService(IStudentRepository _repo){
         this.repo = _repo;
-        this.mgr = mgr;
     }
 
 
@@ -58,12 +60,38 @@ public class StudentService{
 
     }
 
+    public Student getStudentDetails(String username){
+
+        String query = "select s from Student s where s.userName= :username";
+
+        if(query!=null){
+            return mgr.unwrap(Session.class).createQuery(query,Student.class)
+                    .setParameter("username", username).getSingleResult();
+        }
+        return null;
+
+    }
+
     //update
-    public Student updateStudentDetails(Student _student){
+    public Student updateStudentDetails(Student _student, Long _id){
         if(_student == null){
             return null;
         }
-        return repo.save(_student);
+        Student existingStudent = this.getStudentById(_id);
+
+        if(existingStudent != null){
+            existingStudent.setId(_student.getId());
+            existingStudent.setName(_student.getName());
+            existingStudent.setUserName(_student.getUserName());
+            existingStudent.setAddress(_student.getAddress());
+            existingStudent.setEmail(_student.getEmail());
+            existingStudent.setPassword(_student.getPassword());
+            existingStudent.setConfirmPassword(_student.getConfirmPassword());
+            existingStudent.setPhone(_student.getPhone());
+            existingStudent.setRole(_student.getRole());
+        }
+        mgr.unwrap(Session.class).update(existingStudent);
+        return existingStudent;
     }
 
     //delete

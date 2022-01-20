@@ -2,6 +2,7 @@ package com.app.core.StudentInformationSystem.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 public class Student implements Serializable {
@@ -130,5 +131,19 @@ public class Student implements Serializable {
                 ", Address='" + Address + '\'' +
                 ", role=" + role +
                 '}';
+    }
+//still not over-ridden the equal and hash code method.
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return id.equals(student.id) && Objects.equals(name, student.name) && Objects.equals(userName, student.userName) && Objects.equals(password, student.password) && Objects.equals(confirmPassword, student.confirmPassword) && Objects.equals(phone, student.phone) && Objects.equals(imageUrl, student.imageUrl) && Objects.equals(email, student.email) && Objects.equals(Address, student.Address) && role == student.role;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, userName, password, confirmPassword, phone, imageUrl, email, Address, role);
     }
 }

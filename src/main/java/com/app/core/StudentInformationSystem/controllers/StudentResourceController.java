@@ -1,6 +1,7 @@
 package com.app.core.StudentInformationSystem.controllers;
 
 import com.app.core.StudentInformationSystem.model.Student;
+import com.app.core.StudentInformationSystem.model.User;
 import com.app.core.StudentInformationSystem.service.StudentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,18 +30,30 @@ public class StudentResourceController {
         return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping("/studentDetails")
-    public ResponseEntity<?> getStudent(@RequestParam("username") String username, @RequestParam("password")  String password) {
-        Student _student = _service.getStudentDetails(username, password);
+    @PostMapping("/authentication")
+    public ResponseEntity<?> getStudent(@RequestBody User _user) {
+        Student _student = _service.getStudentDetails(_user.getUsername(), _user.getPassword());
+        if (_student != null) {
+            return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(_student, HttpStatus.OK);
+    }
+
+    @PostMapping("/getByName")
+    public ResponseEntity<?> getStudentByUserName(@RequestBody User _user) {
+        Student _student = _service.getStudentDetails(_user.getUsername());
         if (_student == null) {
             return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(_student, HttpStatus.OK);
     }
 
-    @GetMapping("/fetchById")
-    public ResponseEntity<Student> fetchById(@RequestParam Long id){
+    @GetMapping("/fetchById/{id}")
+    public ResponseEntity<?> fetchById(@PathVariable("id") Long id){
         Student student = _service.getStudentById(id);
+        if(student == null){
+            return new ResponseEntity<>("student doesnot exist",HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<>(student,HttpStatus.OK);
     }
 
@@ -50,13 +63,17 @@ public class StudentResourceController {
             Student newStudent = _service.addStudent(_student);
             return new ResponseEntity<>(newStudent, HttpStatus.CREATED);
         }
-        return new ResponseEntity<>("Password mismatch",HttpStatus.NOT_ACCEPTABLE);
+        return new ResponseEntity<>("Password mismatch",HttpStatus.UNAUTHORIZED);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<Student> updateDetails(@RequestBody Student _student){
-        Student updateStudent = _service.updateStudentDetails(_student);
-        return new ResponseEntity<>(updateStudent,HttpStatus.OK);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateDetails(@RequestBody Student _student, @PathVariable("id") Long _id) {
+
+        if (_student.getPassword().equals(_student.getConfirmPassword())) {
+            Student newStudent = _service.updateStudentDetails(_student,_id);
+            return new ResponseEntity<>(newStudent, HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Password mismatch", HttpStatus.NOT_ACCEPTABLE);
     }
 
     @DeleteMapping("/removeById")

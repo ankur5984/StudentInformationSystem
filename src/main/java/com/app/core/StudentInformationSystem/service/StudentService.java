@@ -51,7 +51,7 @@ public class StudentService{
 
         String query = "select s from Student s where s.userName= :username and s.password= :password";
 
-        if(query!=null){
+        if(query==null){
             return mgr.unwrap(Session.class).createQuery(query,Student.class)
                     .setParameter("username", username)
                     .setParameter("password",password).getSingleResult();

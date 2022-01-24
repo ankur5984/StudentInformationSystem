@@ -33,7 +33,7 @@ public class StudentResourceController {
     @PostMapping("/authentication")
     public ResponseEntity<?> getStudent(@RequestBody User _user) {
         Student _student = _service.getStudentDetails(_user.getUsername(), _user.getPassword());
-        if (_student != null) {
+        if (_student == null) {
             return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(_student, HttpStatus.OK);
@@ -51,9 +51,6 @@ public class StudentResourceController {
     @GetMapping("/fetchById/{id}")
     public ResponseEntity<?> fetchById(@PathVariable("id") Long id){
         Student student = _service.getStudentById(id);
-        if(student == null){
-            return new ResponseEntity<>("student doesnot exist",HttpStatus.NOT_FOUND);
-        }
         return new ResponseEntity<>(student,HttpStatus.OK);
     }
 

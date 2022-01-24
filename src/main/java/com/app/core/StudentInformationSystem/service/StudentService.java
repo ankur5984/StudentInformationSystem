@@ -44,7 +44,7 @@ public class StudentService{
     public Student getStudentById(Long _id){
       //  return repo.findStudentById(_id).orElse(new Student());
         return repo.findStudentById(_id)
-                .orElseThrow(() -> new StudentNotFoundException("Student by id" + _id + "not found on DataBase"));
+                .orElseThrow(() -> new StudentNotFoundException("Student by id " + _id + " not found on DataBase"));
     }
 
     public Student getStudentDetails(String username, String password){

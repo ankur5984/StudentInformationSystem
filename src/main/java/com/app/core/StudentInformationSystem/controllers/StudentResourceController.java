@@ -90,4 +90,13 @@ public class StudentResourceController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/forgetPassword")
+    public ResponseEntity<?> forgetPassword(@RequestParam("email") String _email){
+        String password = _service.sendEmail(_email);
+        if(password!=null){
+            return new ResponseEntity<>(password,HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Student not found",HttpStatus.NOT_FOUND);
+    }
+
 }

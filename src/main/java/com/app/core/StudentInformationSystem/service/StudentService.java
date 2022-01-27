@@ -3,7 +3,12 @@ package com.app.core.StudentInformationSystem.service;
 import com.app.core.StudentInformationSystem.daos.IStudentRepository;
 import com.app.core.StudentInformationSystem.exceptionHandler.StudentNotFoundException;
 import com.app.core.StudentInformationSystem.model.Student;
+import com.app.core.StudentInformationSystem.utils.AppConstant;
+import com.app.core.StudentInformationSystem.utils.AppUtil;
+import com.app.core.StudentInformationSystem.utils.SmtpConfiguration;
 import org.hibernate.Session;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -19,8 +24,11 @@ public class StudentService{
     private EntityManager mgr; //issue occurred @Autowiring is not working. so used injected in constructor
     private final IStudentRepository repo;
 
-    public StudentService(IStudentRepository _repo){
+    private final SmtpConfiguration smtp;
+
+    public StudentService(IStudentRepository _repo, SmtpConfiguration _smtp){
         this.repo = _repo;
+        this.smtp = _smtp;
     }
 
 
@@ -51,12 +59,9 @@ public class StudentService{
 
         String query = "select s from Student s where s.userName= :username and s.password= :password";
 
-        if(query==null){
-            return mgr.unwrap(Session.class).createQuery(query,Student.class)
-                    .setParameter("username", username)
-                    .setParameter("password",password).getSingleResult();
-        }
-        return null;
+        return mgr.unwrap(Session.class).createQuery(query,Student.class)
+                .setParameter("username", username)
+                .setParameter("password",password).getSingleResult();
 
     }
 
@@ -64,11 +69,8 @@ public class StudentService{
 
         String query = "select s from Student s where s.userName= :username";
 
-        if(query!=null){
-            return mgr.unwrap(Session.class).createQuery(query,Student.class)
-                    .setParameter("username", username).getSingleResult();
-        }
-        return null;
+        return mgr.unwrap(Session.class).createQuery(query,Student.class)
+                .setParameter("username", username).getSingleResult();
 
     }
 
@@ -98,5 +100,56 @@ public class StudentService{
     public void deleteStudent(Long _id){
      repo.deleteStudentById(_id);
     }
+
+    //forget password -> get full student
+    public Student getStudentByEmail(String _email) throws StudentNotFoundException {
+        Student student;
+        student = repo.findStudentByEmail(_email);
+        return student;
+    }
+    //send email
+    public String sendEmail(String _email){
+        try{
+            Student student = this.getStudentByEmail(_email);
+            if(student!=null){
+             //  String pass = student.getPassword();
+                String newPassword = AppUtil.getAlphaNumericString();
+                student.setPassword(newPassword);
+                student.setConfirmPassword(newPassword);
+
+                Student _updatedStudent = this.updateStudentDetails(student,student.getId());
+
+                //create mail sender
+                JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+                mailSender.setHost(this.smtp.getHost());
+                mailSender.setPort(this.smtp.getPort());
+                mailSender.setUsername(this.smtp.getUsername());
+                mailSender.setPassword(this.smtp.getPassword());
+
+                //Simple message instance consist -> from ,to,bcc,body
+                SimpleMailMessage mailSchema = new SimpleMailMessage();
+                mailSchema.setFrom(AppConstant.COMPANY_EMAIL_ADMIN);
+                mailSchema.setTo(_updatedStudent.getEmail());
+                mailSchema.setSubject(AppConstant.FORGET_PASSWORD_SUBJECT_LINE);
+                String body = "Hi, "+_updatedStudent.getName() +", Your Password was reset successfully. Please use the the beloe password to login to your SMS Account. \n"+
+                        " Password : "+ _updatedStudent.getPassword()+" \n Please donot share it with Anyone";
+                mailSchema.setText(body);
+
+                //schema is ready to stream
+                //send email
+                mailSender.send(mailSchema);
+                return body;
+            }
+
+
+        }catch (StudentNotFoundException _ex){
+            throw new StudentNotFoundException("Student not found");
+        }
+
+
+
+        return "wrong email provided";
+    }
+
 
 }

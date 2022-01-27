@@ -42,7 +42,7 @@ public class AppLog  {
 
     public static File generateFile(){
 
-        File newFile = new File(AppConstant.logFolderPath+AppConstant.fileName);
+        File newFile = new File(AppConstant.LOG_FOLDER_PATH +AppConstant.FILE_NAME);
         try {
             boolean f = newFile.createNewFile();
             System.out.println(f);
